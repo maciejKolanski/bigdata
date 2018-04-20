@@ -5,6 +5,7 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bson.Document;
 
@@ -17,7 +18,7 @@ import com.mongodb.client.MongoDatabase;
 import com.opencsv.CSVReader;
 
 public abstract class CSVParser implements Runnable {
-	public CSVParser(String filename, String dbName, String collectionNameA) {
+	public CSVParser(String filename, String dbName, String collectionNameA, AtomicBoolean changesDetectedA) {
 		csvFilename = filename;
 		
 		mongoClient = new MongoClient();
@@ -27,6 +28,8 @@ public abstract class CSVParser implements Runnable {
 		
 		fetchedHighestProcessedYear = fetchHighestProcessedYear();
 		highestProcessedYear = fetchedHighestProcessedYear;
+		
+		changesDetected = changesDetectedA;
 	}
 	
 	public void run() {	
@@ -62,6 +65,11 @@ public abstract class CSVParser implements Runnable {
 	}
 	
 	private void pushHighestProcessedYear() {
+		if (highestProcessedYear <= fetchedHighestProcessedYear) 
+			return;
+		
+		changesDetected.set(true);
+		
 		MongoCollection<Document> lastProcessedYears = db.getCollection(CollectionNames.last_year);
 		
 		Document querry = new Document();
@@ -80,6 +88,7 @@ public abstract class CSVParser implements Runnable {
 	protected int highestProcessedYear;
 	protected final int fetchedHighestProcessedYear;
 	protected final String collectionName;
+	protected AtomicBoolean changesDetected;
 	private final String csvFilename;
 	private MongoClient mongoClient;
 }

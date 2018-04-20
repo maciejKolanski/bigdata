@@ -2,6 +2,7 @@ package acquirer;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -58,10 +59,12 @@ public class Acquirer {
 	}
 	
 	private static void runParsers(String inputDir, String dbName) {
-		Thread populationParser = new Thread(new PopulationCSVParser(inputDir, dbName));
-		Thread gdpParser = new Thread(new GDPCSVParser(inputDir, dbName));
-		Thread educationParser = new Thread(new EducationCSVParser(inputDir, dbName));
-		Thread metadataParser = new Thread(new MetadataCSVParser(inputDir, dbName));
+		AtomicBoolean changesDetected = new AtomicBoolean();
+		
+		Thread populationParser = new Thread(new PopulationCSVParser(inputDir, dbName, changesDetected));
+		Thread gdpParser = new Thread(new GDPCSVParser(inputDir, dbName, changesDetected));
+		Thread educationParser = new Thread(new EducationCSVParser(inputDir, dbName, changesDetected));
+		Thread metadataParser = new Thread(new MetadataCSVParser(inputDir, dbName, changesDetected));
 		
 		populationParser.start();
 		gdpParser.start();
@@ -78,7 +81,10 @@ public class Acquirer {
 			metadataParser.join();
 			System.out.println("INFO: Metadata CSV parser finished");
 			
-			System.out.println("CALLING MapReduce implementation!");
+			if (changesDetected.get())
+				System.out.println("CALLING MapReduce implementation!");
+			else
+				System.out.println("No changes detected!");
 		}
 		catch(InterruptedException e) {
 			System.out.println("ERROR Threads join interrupted!");

@@ -5,6 +5,7 @@ import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bson.Document;
 
@@ -17,12 +18,13 @@ import com.opencsv.CSVReader;
 
 public class MetadataCSVParser implements Runnable {
 
-	public MetadataCSVParser(String directory, String dbName) {
-		csvFilename = Paths.get(directory, "population.csv").toString();
+	public MetadataCSVParser(String directory, String dbName, AtomicBoolean changesDetectedA) {
+		csvFilename = Paths.get(directory, "metadata_country.csv").toString();
 		
 		mongoClient = new MongoClient();
 		db = mongoClient.getDatabase(dbName);
 		collection = db.getCollection(CollectionNames.metadata);
+		changesDetected = changesDetectedA;
 	}
 
 	@Override
@@ -32,8 +34,9 @@ public class MetadataCSVParser implements Runnable {
 			CSVReader csvReader = new CSVReader(reader);
 			
 	        String[] line = csvReader.readNext();
-	        if (line != null) {
+	        if (line != null && line.length > 1) {
 	        	collection.drop();
+	        	changesDetected.set(true);
 	        }
 	        
 	        while ((line = csvReader.readNext()) != null) {
@@ -55,4 +58,5 @@ public class MetadataCSVParser implements Runnable {
 	private final String csvFilename;
 	private MongoClient mongoClient;
 	private MongoCollection<Document> collection;
+	private AtomicBoolean changesDetected;
 }

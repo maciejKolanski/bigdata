@@ -1,6 +1,7 @@
 package acquirer.csvparsers;
 
 import java.nio.file.Paths;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bson.Document;
 
@@ -10,8 +11,9 @@ import acquirer.CollectionNames;
 
 public class GDPCSVParser extends CSVParser {
 
-	public GDPCSVParser(String directory, String dbName) {
-		super(Paths.get(directory, "gdp.csv").toString(), dbName, CollectionNames.gdp);
+	public GDPCSVParser(String directory, String dbName, AtomicBoolean changesDetected) {
+		super(Paths.get(directory, "gdp.csv").toString(),
+				dbName, CollectionNames.gdp, changesDetected);
 
 		collection = db.getCollection(CollectionNames.gdp);
 	}

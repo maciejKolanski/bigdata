@@ -3,6 +3,7 @@ package acquirer.csvparsers;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bson.Document;
 
@@ -12,8 +13,9 @@ import acquirer.CollectionNames;
 
 public class EducationCSVParser extends CSVParser {
 
-	public EducationCSVParser(String directory, String dbName) {
-		super(Paths.get(directory, "education.csv").toString(), dbName, CollectionNames.education);
+	public EducationCSVParser(String directory, String dbName, AtomicBoolean changesDetected) {
+		super(Paths.get(directory, "education.csv").toString(),
+				dbName, CollectionNames.education, changesDetected);
 
 		collection = db.getCollection(CollectionNames.education);
 		years = new ArrayList<Integer>();
