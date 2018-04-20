@@ -1,12 +1,16 @@
 package acquirer;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
-import acquirer.CollectionNames;
-import acquirer.csvparsers.*;
+import org.bson.Document;
+
+import acquirer.csvparsers.PopulationCSVParser;
 
 import com.mongodb.MongoClient;
-import com.mongodb.client.*;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
 
 public class Acquirer {
 	
@@ -21,19 +25,31 @@ public class Acquirer {
 	}
 	
 	private static void prepareCollections(MongoDatabase db) {
-		final List<String> collectionsToCreate = Arrays.asList(
-				CollectionNames.education_collection,
-				CollectionNames.gdp_collection,
-				CollectionNames.population_collection);
-		
-		for (final String collectionToCreate : collectionsToCreate) {
+		for (final String collectionToCreate : CollectionNames.All()) {
 	        if (!hasCollection(db, collectionToCreate))
 	        	db.createCollection(collectionToCreate);
 	    }
+		
+		MongoCollection<Document> last_years = db.getCollection(CollectionNames.last_year);
+		if (last_years.count() == 0) {
+			List<String> collections = Arrays.asList(
+					CollectionNames.gdp,
+					CollectionNames.education,
+					CollectionNames.population);
+			
+			for (final String collectionName : collections) {	
+				Document doc = new Document();
+				doc.append("collection", collectionName);
+				doc.append("lastProcessedYear", 0);
+				
+				last_years.insertOne(doc);
+			}
+		}
 	}
 	
 	private static void runParsers(MongoDatabase db) {
-		Thread populationParser = new Thread(new PopulationCSVParser("/home/cloudera/workspace/bigdata/tests/functional/same_year/population.csv", db));
+		Thread populationParser = new Thread(
+				new PopulationCSVParser("/home/cloudera/workspace/bigdata/tests/functional/same_year/population.csv", "bigdata"));
 		
 		populationParser.start();
 	}
