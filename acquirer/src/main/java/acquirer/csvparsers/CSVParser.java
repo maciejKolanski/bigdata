@@ -17,11 +17,15 @@ import com.mongodb.client.MongoDatabase;
 import com.opencsv.CSVReader;
 
 public abstract class CSVParser implements Runnable {
-	public CSVParser(String filename, String dbName) {
+	public CSVParser(String filename, String dbName, String collectionNameA) {
 		csvFilename = filename;
 		
 		mongoClient = new MongoClient();
 		db = mongoClient.getDatabase(dbName);
+		
+		collectionName = collectionNameA;
+		
+		highestProcessedYear = fetchHighestProcessedYear();
 	}
 	
 	public void run() {	
@@ -43,7 +47,7 @@ public abstract class CSVParser implements Runnable {
 		pushHighestProcessedYear();
 	}
 	
-	protected int fetchHighestProcessedYearFor(String collectionName) {
+	private int fetchHighestProcessedYear() {
 		MongoCollection<Document> lastProcessedYears = db.getCollection(CollectionNames.last_year);
 		
 		Document querry = new Document();
@@ -54,7 +58,7 @@ public abstract class CSVParser implements Runnable {
 		return iter.first().getInteger("lastProcessedYear", 0);
 	}
 	
-	protected void pushHighestProcessedYearFor(String collectionName, int year) {
+	private void pushHighestProcessedYear() {
 		MongoCollection<Document> lastProcessedYears = db.getCollection(CollectionNames.last_year);
 		
 		Document querry = new Document();
@@ -62,15 +66,16 @@ public abstract class CSVParser implements Runnable {
 		
 		Document yearToUpdate = new Document();
 		yearToUpdate.append("collection", collectionName);
-		yearToUpdate.append("lastProcessedYear", year);
+		yearToUpdate.append("lastProcessedYear", highestProcessedYear);
 		
 		lastProcessedYears.replaceOne(querry, yearToUpdate);
 	}
 	
 	protected abstract void parseLine(String[] line);
-	protected abstract void pushHighestProcessedYear();
 	
 	protected MongoDatabase db;
+	protected int highestProcessedYear;
+	protected final String collectionName;
 	private final String csvFilename;
 	private MongoClient mongoClient;
 }

@@ -2,17 +2,16 @@ package acquirer.csvparsers;
 
 import org.bson.Document;
 
-import acquirer.CollectionNames;
-import acquirer.csvparsers.CSVParser;
-
 import com.mongodb.client.MongoCollection;
 
-public class PopulationCSVParser extends CSVParser {
-	
-	public PopulationCSVParser(String filename, String dbName) {
-		super(filename, dbName, CollectionNames.population);
-		
-		collection = db.getCollection(CollectionNames.population);
+import acquirer.CollectionNames;
+
+public class GDPCSVParser extends CSVParser {
+
+	public GDPCSVParser(String filename, String dbName) {
+		super(filename, dbName, CollectionNames.gdp);
+
+		collection = db.getCollection(CollectionNames.gdp);
 	}
 
 	@Override
@@ -39,10 +38,10 @@ public class PopulationCSVParser extends CSVParser {
 			collection.insertOne(document);
 		}
 		catch (IndexOutOfBoundsException e) {
-			System.out.println("WARNING: Skipping invalid population line: " + line);
+			System.out.println("WARNING: Skipping invalid gdp line: " + line);
 		}
 		catch (NumberFormatException e) {
-			System.out.println("WARNING: Invalid year in population line: " + line);
+			System.out.println("WARNING: Invalid year in gdp line: " + line);
 		}
 	}
 	
