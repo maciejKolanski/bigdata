@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.bson.Document;
 
+import acquirer.csvparsers.EducationCSVParser;
 import acquirer.csvparsers.GDPCSVParser;
 import acquirer.csvparsers.PopulationCSVParser;
 
@@ -53,11 +54,14 @@ public class Acquirer {
 				new PopulationCSVParser("/home/cloudera/workspace/bigdata/tests/functional/same_year/population.csv", "bigdata"));
 		Thread gdpParser = new Thread(
 				new GDPCSVParser("/home/cloudera/workspace/bigdata/tests/functional/same_year/gdp.csv", "bigdata"));
+		Thread educationParser = new Thread(
+				new EducationCSVParser("/home/cloudera/workspace/bigdata/tests/functional/same_year/education.csv", "bigdata"));
 		
 		
 		
 		populationParser.start();
 		gdpParser.start();
+		educationParser.start();
 	}
 	
 	public static void main(String[] args) {
