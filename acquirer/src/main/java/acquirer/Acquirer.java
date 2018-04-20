@@ -1,13 +1,14 @@
 package acquirer;
 
 import java.util.*;
+
+import acquirer.CollectionNames;
+import acquirer.csvparsers.*;
+
 import com.mongodb.MongoClient;
 import com.mongodb.client.*;
 
 public class Acquirer {
-	public static final String education_collection 	= "education";
-	public static final String gdp_collection 			= "gdp";
-	public static final String population_collection 	= "population";
 	
 	private static Boolean hasCollection(MongoDatabase db, String collection) {
 		final MongoCursor<String> it = db.listCollectionNames().iterator();
@@ -20,7 +21,10 @@ public class Acquirer {
 	}
 	
 	private static void prepareCollections(MongoDatabase db) {
-		final List<String> collectionsToCreate = Arrays.asList(education_collection, gdp_collection, population_collection);
+		final List<String> collectionsToCreate = Arrays.asList(
+				CollectionNames.education_collection,
+				CollectionNames.gdp_collection,
+				CollectionNames.population_collection);
 		
 		for (final String collectionToCreate : collectionsToCreate) {
 	        if (!hasCollection(db, collectionToCreate))
@@ -28,13 +32,19 @@ public class Acquirer {
 	    }
 	}
 	
+	private static void runParsers(MongoDatabase db) {
+		Thread populationParser = new Thread(new PopulationCSVParser("/home/cloudera/workspace/bigdata/tests/functional/same_year/population.csv", db));
+		
+		populationParser.start();
+	}
+	
 	public static void main(String[] args) {
 		MongoClient mongoClient = new MongoClient();
 		MongoDatabase db = mongoClient.getDatabase("bigdata");
 			
 		prepareCollections(db);
-				
-		(new Thread(new CSVParser("/home/cloudera/workspace/bigdata/tests/functional/same_year/education.csv"))).start();
+					
+		runParsers(db);
 		
 		mongoClient.close();
 	}
