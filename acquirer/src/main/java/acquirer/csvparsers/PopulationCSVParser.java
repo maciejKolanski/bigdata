@@ -16,19 +16,20 @@ public class PopulationCSVParser extends CSVParser {
 	}
 
 	@Override
-	protected void parseLine(String[] line) {
+	protected Boolean parseLine(String[] line) {
 		if (!firstLineSkipped) {
 			firstLineSkipped = true;
-			return;
+			return false;
 		}
 
 		try {
 			int year = Integer.parseInt(line[2]);
 			
-			if (year <= highestProcessedYear)
-				return;
+			if (year <= fetchedHighestProcessedYear)
+				return false;
 			
-			highestProcessedYear = year;
+			if (year > highestProcessedYear)
+				highestProcessedYear = year;
 			
 			Document document = new Document();
 			document.append("name", line[0]);
@@ -44,6 +45,8 @@ public class PopulationCSVParser extends CSVParser {
 		catch (NumberFormatException e) {
 			System.out.println("WARNING: Invalid year in population line: " + line);
 		}
+		
+		return false;
 	}
 	
 	private Boolean firstLineSkipped = false;

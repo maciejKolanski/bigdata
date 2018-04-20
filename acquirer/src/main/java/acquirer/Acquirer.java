@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.bson.Document;
 
+import acquirer.csvparsers.GDPCSVParser;
 import acquirer.csvparsers.PopulationCSVParser;
 
 import com.mongodb.MongoClient;
@@ -50,8 +51,13 @@ public class Acquirer {
 	private static void runParsers(MongoDatabase db) {
 		Thread populationParser = new Thread(
 				new PopulationCSVParser("/home/cloudera/workspace/bigdata/tests/functional/same_year/population.csv", "bigdata"));
+		Thread gdpParser = new Thread(
+				new GDPCSVParser("/home/cloudera/workspace/bigdata/tests/functional/same_year/gdp.csv", "bigdata"));
+		
+		
 		
 		populationParser.start();
+		gdpParser.start();
 	}
 	
 	public static void main(String[] args) {

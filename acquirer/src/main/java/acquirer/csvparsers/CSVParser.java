@@ -25,7 +25,8 @@ public abstract class CSVParser implements Runnable {
 		
 		collectionName = collectionNameA;
 		
-		highestProcessedYear = fetchHighestProcessedYear();
+		fetchedHighestProcessedYear = fetchHighestProcessedYear();
+		highestProcessedYear = fetchedHighestProcessedYear;
 	}
 	
 	public void run() {	
@@ -35,7 +36,9 @@ public abstract class CSVParser implements Runnable {
 			
 	        String[] line;
 	        while ((line = csvReader.readNext()) != null) {
-	        	parseLine(line);
+	        	Boolean earlyFinish = parseLine(line);
+	        	if (earlyFinish)
+	        		break;
 	        }
 	        
 	        csvReader.close();
@@ -71,10 +74,11 @@ public abstract class CSVParser implements Runnable {
 		lastProcessedYears.replaceOne(querry, yearToUpdate);
 	}
 	
-	protected abstract void parseLine(String[] line);
+	protected abstract Boolean parseLine(String[] line);
 	
-	protected MongoDatabase db;
+	protected MongoDatabase db;;
 	protected int highestProcessedYear;
+	protected final int fetchedHighestProcessedYear;
 	protected final String collectionName;
 	private final String csvFilename;
 	private MongoClient mongoClient;
