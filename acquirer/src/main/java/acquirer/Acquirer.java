@@ -7,6 +7,7 @@ import org.bson.Document;
 
 import acquirer.csvparsers.EducationCSVParser;
 import acquirer.csvparsers.GDPCSVParser;
+import acquirer.csvparsers.MetadataCSVParser;
 import acquirer.csvparsers.PopulationCSVParser;
 
 import com.mongodb.MongoClient;
@@ -56,12 +57,13 @@ public class Acquirer {
 				new GDPCSVParser("/home/cloudera/workspace/bigdata/tests/functional/same_year/gdp.csv", "bigdata"));
 		Thread educationParser = new Thread(
 				new EducationCSVParser("/home/cloudera/workspace/bigdata/tests/functional/same_year/education.csv", "bigdata"));
-		
-		
+		Thread metadataParser = new Thread(
+				new MetadataCSVParser("/home/cloudera/workspace/bigdata/tests/functional/same_year/metadata_country.csv", "bigdata"));
 		
 		populationParser.start();
 		gdpParser.start();
 		educationParser.start();
+		metadataParser.start();
 	}
 	
 	public static void main(String[] args) {

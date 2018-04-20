@@ -76,7 +76,7 @@ public abstract class CSVParser implements Runnable {
 	
 	protected abstract Boolean parseLine(String[] line);
 	
-	protected MongoDatabase db;;
+	protected MongoDatabase db;
 	protected int highestProcessedYear;
 	protected final int fetchedHighestProcessedYear;
 	protected final String collectionName;
