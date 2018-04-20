@@ -1,5 +1,7 @@
 package acquirer.csvparsers;
 
+import java.nio.file.Paths;
+
 import org.bson.Document;
 
 import com.mongodb.client.MongoCollection;
@@ -8,8 +10,8 @@ import acquirer.CollectionNames;
 
 public class GDPCSVParser extends CSVParser {
 
-	public GDPCSVParser(String filename, String dbName) {
-		super(filename, dbName, CollectionNames.gdp);
+	public GDPCSVParser(String directory, String dbName) {
+		super(Paths.get(directory, "gdp.csv").toString(), dbName, CollectionNames.gdp);
 
 		collection = db.getCollection(CollectionNames.gdp);
 	}

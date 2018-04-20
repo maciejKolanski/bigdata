@@ -1,5 +1,6 @@
 package acquirer.csvparsers;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,8 +12,8 @@ import acquirer.CollectionNames;
 
 public class EducationCSVParser extends CSVParser {
 
-	public EducationCSVParser(String filename, String dbName) {
-		super(filename, dbName, CollectionNames.education);
+	public EducationCSVParser(String directory, String dbName) {
+		super(Paths.get(directory, "education.csv").toString(), dbName, CollectionNames.education);
 
 		collection = db.getCollection(CollectionNames.education);
 		years = new ArrayList<Integer>();

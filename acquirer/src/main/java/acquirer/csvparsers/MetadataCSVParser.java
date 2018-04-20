@@ -17,8 +17,8 @@ import com.opencsv.CSVReader;
 
 public class MetadataCSVParser implements Runnable {
 
-	public MetadataCSVParser(String filename, String dbName) {
-		csvFilename = filename;
+	public MetadataCSVParser(String directory, String dbName) {
+		csvFilename = Paths.get(directory, "population.csv").toString();
 		
 		mongoClient = new MongoClient();
 		db = mongoClient.getDatabase(dbName);

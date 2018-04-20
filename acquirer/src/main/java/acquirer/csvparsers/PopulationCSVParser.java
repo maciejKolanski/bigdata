@@ -1,5 +1,7 @@
 package acquirer.csvparsers;
 
+import java.nio.file.Paths;
+
 import org.bson.Document;
 
 import acquirer.CollectionNames;
@@ -9,8 +11,8 @@ import com.mongodb.client.MongoCollection;
 
 public class PopulationCSVParser extends CSVParser {
 	
-	public PopulationCSVParser(String filename, String dbName) {
-		super(filename, dbName, CollectionNames.population);
+	public PopulationCSVParser(String directory, String dbName) {
+		super(Paths.get(directory, "population.csv").toString(), dbName, CollectionNames.population);
 		
 		collection = db.getCollection(CollectionNames.population);
 	}
