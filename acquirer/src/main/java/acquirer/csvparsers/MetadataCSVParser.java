@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bson.Document;
 
+import acquirer.Archiver;
 import acquirer.CollectionNames;
 
 import com.mongodb.MongoClient;
@@ -52,6 +53,8 @@ public class MetadataCSVParser implements Runnable {
 		catch(IOException e) {
 			System.out.println("ERROR! CSV parsing of file " + csvFilename);
 		}
+		
+		Archiver.archive(csvFilename);
 	}
 
 	protected MongoDatabase db;;

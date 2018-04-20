@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.bson.Document;
 
+import acquirer.Archiver;
 import acquirer.CollectionNames;
 
 import com.mongodb.MongoClient;
@@ -50,7 +51,8 @@ public abstract class CSVParser implements Runnable {
 			System.out.println("ERROR! CSV parsing of file " + csvFilename);
 		}
 		
-		pushHighestProcessedYear();
+		pushHighestProcessedYear();		
+		Archiver.archive(csvFilename);
 	}
 	
 	private int fetchHighestProcessedYear() {
