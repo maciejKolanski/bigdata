@@ -29,7 +29,7 @@ public class EducationCSVParser extends CSVParser {
 		}
 		else if (headerLines == 1) {
 			headerLines -= 1;
-			for (int i = 4; i < line.length; ++i){
+			for (int i = 4; i < line.length - 1; ++i){
 				years.add(Integer.parseInt(line[i]));
 			}
 			if (years.size() == 0)
