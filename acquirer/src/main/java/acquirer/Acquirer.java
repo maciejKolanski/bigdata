@@ -1,5 +1,7 @@
 package acquirer;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -91,6 +93,26 @@ public class Acquirer {
 		}
 		
 	}
+
+	public static void watchdog(String inputDirPath, String dbName) {	
+		while(true) {
+			File trigger = new File(Paths.get(inputDirPath, "start").toString());
+			
+			if (trigger.exists()) {
+				runParsers(inputDirPath, dbName);
+				
+				trigger.delete();
+			}
+			
+			try {
+				Thread.sleep(1500);
+			}
+			catch (InterruptedException e) {
+			System.out.println("ERROR, watchdog has sleep disorders");
+			}
+		}
+		
+	}
 	
 	public static void main(String[] args) {
 		Options options = new Options();
@@ -125,9 +147,8 @@ public class Acquirer {
 			db.drop();
 		
 		prepareCollections(db);
-					
-		runParsers(cmd.getOptionValue("inputdirectory"), cmd.getOptionValue("dbname"));
-		
 		mongoClient.close();
+
+		watchdog(cmd.getOptionValue("inputdirectory"), cmd.getOptionValue("dbname"));
 	}
 }
