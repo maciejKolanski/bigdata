@@ -1,6 +1,9 @@
 package acquirer;
 
 import java.io.File;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
@@ -83,10 +86,18 @@ public class Acquirer {
 			metadataParser.join();
 			System.out.println("INFO: Metadata CSV parser finished");
 			
-			if (changesDetected.get())
+			if (changesDetected.get()) {
 				System.out.println("CALLING MapReduce implementation!");
-			else
+				try{
+					initMapReduce();
+				}
+				catch(Exception e) {
+					System.out.println("ERROR: Couldn't invoke mapReduce");
+				}
+			}
+			else{
 				System.out.println("No changes detected!");
+			}
 		}
 		catch(InterruptedException e) {
 			System.out.println("ERROR Threads join interrupted!");
@@ -112,6 +123,18 @@ public class Acquirer {
 			}
 		}
 		
+	}
+	
+	private static void initMapReduce() throws Exception {
+		URL url = new URL("http://localhost:8080/mapReduce");
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod("GET");
+		conn.setRequestProperty("Accept", "application/json");
+
+		if (conn.getResponseCode() != 200) {
+			throw new RuntimeException("Failed : HTTP error code : "
+					+ conn.getResponseCode());
+		}
 	}
 	
 	public static void main(String[] args) {
