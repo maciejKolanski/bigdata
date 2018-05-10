@@ -10,6 +10,6 @@ public class MongoMapper extends Mapper<Object, BSONObject, Text, Text> {
 	
 	@Override
 	public void map(Object key, BSONObject value, Context context) {
-		
+		System.out.println("mapper");
 	}
 }
