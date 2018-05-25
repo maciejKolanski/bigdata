@@ -8,14 +8,18 @@ import javax.ws.rs.core.Response;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.jobcontrol.JobControl;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mongodb.MongoClient;
+import com.mongodb.client.MongoDatabase;
 import com.mongodb.hadoop.MongoInputFormat;
 import com.mongodb.hadoop.MongoOutputFormat;
 
@@ -23,6 +27,7 @@ import dataCombining.BasicReducer;
 import dataCombining.EducationMapper;
 import dataCombining.GdpMapper;
 import dataCombining.LineKeyWritable;
+import dataCombining.LineValueWritable;
 import dataCombining.PopulationMapper;
 
 @RestController
@@ -37,66 +42,67 @@ public class HttpListener extends Configured {
 	}
 
 	private boolean startDataCombineJob() throws Exception {
-		/*
-		 * Configuration conf = new Configuration();
-		 * 
-		 * conf.setClass("mongo.job.mapper", MongoMapper.class,
-		 * MongoMapper.class);
-		 */
-		// conf.setClass("mongo.job.reducer", reducerClass, Reducer.class);
-		//
-		// conf.setClass("mongo.job.mapper.output.key", IntWritable.class,
-		// Object.class);
-		// conf.setClass("mongo.job.mapper.output.value", DoubleWritable.class,
-		// Object.class);
-		//
-		// conf.setClass("mongo.job.output.key", NullWritable.class,
-		// Object.class);
-		// conf.setClass("mongo.job.output.value", outputValueClass,
-		// Object.class);
+		prepareMongo();
 
-		/*
-		 * conf.set("mongo.input.uri", "mongodb://127.0.0.1:27017/mydb.gdp");
-		 * conf.set("mongo.output.uri",
-		 * "mongodb://127.0.0.1:27017/mydb.output");
-		 * 
-		 * Job job = Job.getInstance(conf);
-		 * job.setJarByClass(HttpListener.class);
-		 * job.setJobName(this.getClass().getName());
-		 * job.setInputFormatClass(MongoInputFormat.class);
-		 * job.setOutputFormatClass(MongoOutputFormat.class);
-		 * 
-		 * job.setMapperClass(MongoMapper.class);
-		 * 
-		 * return job.waitForCompletion(true);
-		 */
-		startGdpMappingJob();
+	    JobControl jobControl = new JobControl("jobChain"); 
+		
+	    ControlledJob gdp = createBasicJob(GdpMapper.class, "gdp");
 
+    	jobControl.addJob(gdp);
+	    
+        Thread jobControlThread = new Thread(jobControl);
+        jobControlThread.start();
+
+	    while (!jobControl.allFinished()) {
+	        System.out.println("Jobs in waiting state: " + jobControl.getWaitingJobList().size());  
+	        System.out.println("Jobs in ready state: " + jobControl.getReadyJobsList().size());
+	        System.out.println("Jobs in running state: " + jobControl.getRunningJobList().size());
+	        System.out.println("Jobs in success state: " + jobControl.getSuccessfulJobList().size());
+	        System.out.println("Jobs in failed state: " + jobControl.getFailedJobList().size());
+	        
+	        try {
+		        Thread.sleep(500);
+	        } catch (Exception e) {
+        		e.printStackTrace();
+        		return false;
+	        }
+	    } 
+    	
 		return true;
 	}
 
-	private void startGdpMappingJob() throws Exception {
+	private void prepareMongo() {
+		MongoClient mongoClient = new MongoClient();
+		MongoDatabase db = mongoClient.getDatabase("bigdata");
+		
+		db.getCollection("tmpcombined").drop();
+		mongoClient.close();
+	}
+	
+	private ControlledJob createBasicJob(Class<?> mapperClass, String inputCollectionName) throws Exception {
 		Configuration conf = new Configuration();
 
-		conf.setClass("mongo.job.mapper", GdpMapper.class, GdpMapper.class);
+		conf.setClass("mongo.job.mapper", mapperClass, mapperClass);
 		conf.setClass("mongo.job.reducer", BasicReducer.class, BasicReducer.class);
-		conf.set("mongo.input.uri", "mongodb://127.0.0.1:27017/bigdata.gdp");
-		conf.set("mongo.output.uri", "mongodb://127.0.0.1:27017/bigdata.output");
+		conf.set("mongo.input.uri", "mongodb://127.0.0.1:27017/bigdata." + inputCollectionName);
+		conf.set("mongo.output.uri", "mongodb://127.0.0.1:27017/bigdata.tmpcombined");
 
 		Job job = Job.getInstance(conf);
 		job.setJarByClass(HttpListener.class);
-		job.setJobName("gdp_job");
+		job.setJobName(mapperClass.getName());
 		job.setInputFormatClass(MongoInputFormat.class);
 		job.setOutputFormatClass(MongoOutputFormat.class);
 		job.setMapOutputKeyClass(LineKeyWritable.class);
-		job.setMapOutputValueClass(Text.class);
+		job.setMapOutputValueClass(LineValueWritable.class);
 
 		job.setJarByClass(HttpListener.class);
-		job.setJobName("gdpMappingJob");
 
 		job.setMapperClass(GdpMapper.class);
 		job.setReducerClass(BasicReducer.class);
-		job.waitForCompletion(true);
+		
+		ControlledJob controlledJob = new ControlledJob(conf);
+		controlledJob.setJob(job);
+		return controlledJob;
 	}
 
 	private void startPopulationMappingJob() throws Exception {

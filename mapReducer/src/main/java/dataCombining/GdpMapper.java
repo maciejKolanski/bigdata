@@ -2,11 +2,10 @@ package dataCombining;
 
 import java.io.IOException;
 
-import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.bson.BSONObject;
 
-public class GdpMapper extends Mapper<Object, BSONObject, LineKeyWritable, Text> {
+public class GdpMapper extends Mapper<Object, BSONObject, LineKeyWritable, LineValueWritable> {
 	@Override
 	public void map(Object key, BSONObject value, Context context) {
 		
@@ -15,12 +14,14 @@ public class GdpMapper extends Mapper<Object, BSONObject, LineKeyWritable, Text>
 			
 				String code = (String)value.get("code");
 				int year = Integer.parseInt(((String)value.get("year")));
-
-				int gdp = Integer.parseInt(((String)value.get("value")));
+				long gdp = Long.parseLong(((String)value.get("value")));
+				
+				LineValueWritable outputValue = new LineValueWritable();
+				outputValue.setGdp(gdp);
 				
 				context.write(
 						new LineKeyWritable(code, year),
-						new Text("1"));
+						outputValue);
 		
 			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();

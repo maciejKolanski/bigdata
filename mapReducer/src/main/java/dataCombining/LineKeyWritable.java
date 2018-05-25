@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
+import org.bson.BasicBSONObject;
 
 public class LineKeyWritable implements WritableComparable<LineKeyWritable> {
 	private Text code;
@@ -20,6 +21,22 @@ public class LineKeyWritable implements WritableComparable<LineKeyWritable> {
 	public LineKeyWritable(String code, int year) {
 		this.code = new Text(code);
 		this.year = new IntWritable(year);
+	}
+	
+	public Text getCode() {
+		return code;
+	}
+	
+	public IntWritable getYear() {
+		return year;
+	}
+	
+	public BasicBSONObject toBSON() {
+		BasicBSONObject bson = new BasicBSONObject();
+		bson.put("code", code.toString());
+		bson.put("year", year.get());
+		
+		return bson;
 	}
 	
 	@Override

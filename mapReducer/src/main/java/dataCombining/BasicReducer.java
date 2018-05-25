@@ -1,13 +1,20 @@
 package dataCombining;
 
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapreduce.Reducer;
+import java.io.IOException;
 
-public class BasicReducer extends Reducer<LineKeyWritable, Text, Text, IntWritable> {
+import org.apache.hadoop.mapreduce.Reducer;
+import org.bson.BasicBSONObject;
+
+public class BasicReducer extends Reducer<LineKeyWritable, LineValueWritable, BasicBSONObject, BasicBSONObject> {
 	@Override
-	public void reduce(LineKeyWritable key, Iterable<Text> values, Context context) {
-		System.out.println("Basicreducer");
-		System.out.println(key.code);
+	public void reduce(LineKeyWritable key, Iterable<LineValueWritable> values, Context context) {
+		for (LineValueWritable value : values) {
+			try {
+				context.write(key.toBSON(), value.toBSON());
+				break;
+			} catch (IOException | InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }
