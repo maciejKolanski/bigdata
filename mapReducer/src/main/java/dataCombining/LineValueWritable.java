@@ -13,7 +13,7 @@ import org.bson.BasicBSONObject;
 
 public class LineValueWritable implements WritableComparable<LineValueWritable> {
 	public static final int NotSet 		= 0;
-	public static final int Metadata 	= 1;
+	public static final int Region	 	= 1;
 	public static final int GDP 		= 2;
 	public static final int Population 	= 3;
 	public static final int Education 	= 4;
@@ -38,20 +38,25 @@ public class LineValueWritable implements WritableComparable<LineValueWritable> 
 		return type.get();
 	}
 	
-	public void setMetadata(String countryName, String region) {
-		this.countryName.set(countryName);
-		this.region.set(region);
-		this.type.set(Metadata);
-	}
-	
 	public void setGdp(long gdp) {
 		this.gdp.set(gdp);
 		this.type.set(GDP);
 	}
 
-	public void setPopulation(int population) {
+	public void setPopulation(int population, String countryName) {
+		this.countryName.set(countryName);
 		this.population.set(population);
 		this.type.set(Population);
+	}
+
+	public void setEducation(float educationExpenses) {
+		this.education.set(educationExpenses);
+		this.type.set(Education);
+	}
+	
+	public void setRegion(String region) {
+		this.region.set(region);
+		this.type.set(Region);
 	}
 	
 	public BasicBSONObject toBSON() {

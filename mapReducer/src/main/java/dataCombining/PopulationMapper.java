@@ -1,7 +1,5 @@
 package dataCombining;
 
-import java.io.IOException;
-
 import org.apache.hadoop.mapreduce.Mapper;
 import org.bson.BSONObject;
 
@@ -9,22 +7,21 @@ public class PopulationMapper extends Mapper<Object, BSONObject, LineKeyWritable
 	@Override
 	public void map(Object key, BSONObject value, Context context) {
 		
-		if (value.containsField("code") && value.containsField("year")) {
+		if (value.containsField("code") && value.containsField("year") && value.containsField("name")) {
 			try {
 			
-				String code = (String)value.get("code");
-				int year = Integer.parseInt(((String)value.get("year")));
-				int population = Integer.parseInt(((String)value.get("value")));
+				final String code = (String)value.get("code");
+				final String name = (String)value.get("name");
+				final int year = Integer.parseInt(((String)value.get("year")));
+				final int population = Integer.parseInt(((String)value.get("value")));
 				
 				LineValueWritable outputValue = new LineValueWritable();
-				outputValue.setPopulation(population);
+				outputValue.setPopulation(population, name);
 				
 				context.write(
 						new LineKeyWritable(code, year),
 						outputValue);
 		
-			} catch (IOException | InterruptedException e) {
-				e.printStackTrace();
 			} catch (Exception e) {
 				System.out.println("Parsing error: " + value);
 				e.printStackTrace();

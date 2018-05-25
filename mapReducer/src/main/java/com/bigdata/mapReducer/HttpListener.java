@@ -1,22 +1,12 @@
 package com.bigdata.mapReducer;
 
-import java.io.IOException;
-import java.util.concurrent.CountDownLatch;
-
 import javax.ws.rs.core.Response;
 
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.jobcontrol.JobControl;
-import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
-import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
-import org.bson.BSONObject;
+import org.apache.hadoop.mapred.jobcontrol.JobControl;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,6 +20,7 @@ import dataCombining.EducationMapper;
 import dataCombining.GdpMapper;
 import dataCombining.LineKeyWritable;
 import dataCombining.LineValueWritable;
+import dataCombining.MetadataMapper;
 import dataCombining.PopulationMapper;
 
 @RestController
@@ -37,22 +28,19 @@ public class HttpListener extends Configured {
 
 	@RequestMapping("/mapReducer")
 	public Response initMapReduce() throws Exception {
-		boolean dataCombineSuccess = startDataCombineJob();
-		boolean mainJobSuccess = startMainJob();
-		return dataCombineSuccess && mainJobSuccess ? Response.ok().build()
-				: Response.serverError().build();
-	}
-
-	private boolean startDataCombineJob() throws Exception {
 		prepareMongo();
 
 	    JobControl jobControl = new JobControl("jobChain"); 
 		
 	    ControlledJob gdp = createBasicJob(GdpMapper.class, "gdp");
 	    ControlledJob population = createBasicJob(PopulationMapper.class, "population");
+	    ControlledJob education = createBasicJob(EducationMapper.class, "education");
+	    ControlledJob metadata = createBasicJob(MetadataMapper.class, "metadata");
 
     	jobControl.addJob(gdp);
     	jobControl.addJob(population);
+    	jobControl.addJob(education);
+    	jobControl.addJob(metadata);
 	    
         Thread jobControlThread = new Thread(jobControl);
         jobControlThread.start();
@@ -68,11 +56,10 @@ public class HttpListener extends Configured {
 		        Thread.sleep(500);
 	        } catch (Exception e) {
         		e.printStackTrace();
-        		return false;
 	        }
 	    } 
     	
-		return true;
+		return Response.ok().build();
 	}
 
 	private void prepareMongo() {
@@ -109,56 +96,5 @@ public class HttpListener extends Configured {
 		ControlledJob controlledJob = new ControlledJob(conf);
 		controlledJob.setJob(job);
 		return controlledJob;
-	}
-
-	private void startPopulationMappingJob() throws Exception {
-		Configuration conf = new Configuration();
-
-		conf.setClass("mongo.job.mapper", PopulationMapper.class,
-				PopulationMapper.class);
-		conf.set("mongo.input.uri", "mongodb://127.0.0.1:27017/mydb.population");
-		conf.set("mongo.output.uri", "mongodb://127.0.0.1:27017/mydb.output");
-
-		Job job = Job.getInstance(conf);
-		job.setJarByClass(HttpListener.class);
-		job.setJobName(this.getClass().getName());
-		job.setInputFormatClass(MongoInputFormat.class);
-		job.setOutputFormatClass(MongoOutputFormat.class);
-		job.setMapOutputKeyClass(Text.class);
-		job.setMapOutputValueClass(IntWritable.class);
-
-		job.setJarByClass(HttpListener.class);
-		job.setJobName("populationMappingJob");
-
-		job.setMapperClass(PopulationMapper.class);
-		job.waitForCompletion(true);
-	}
-
-	private void startEducationExcepnsesMapinngJob() throws Exception {
-		Configuration conf = new Configuration();
-
-		conf.setClass("mongo.job.mapper", EducationMapper.class,
-				EducationMapper.class);
-		conf.set("mongo.input.uri", "mongodb://127.0.0.1:27017/mydb.education");
-		conf.set("mongo.output.uri", "mongodb://127.0.0.1:27017/mydb.output");
-
-		Job job = Job.getInstance(conf);
-		job.setJarByClass(HttpListener.class);
-		job.setJobName(this.getClass().getName());
-		job.setInputFormatClass(MongoInputFormat.class);
-		job.setOutputFormatClass(MongoOutputFormat.class);
-		job.setMapOutputKeyClass(Text.class);
-		job.setMapOutputValueClass(IntWritable.class);
-
-		job.setJarByClass(HttpListener.class);
-		job.setJobName("educationExcepnsesMappingJob");
-
-		job.setMapperClass(EducationMapper.class);
-		job.waitForCompletion(true);
-	}
-
-	private boolean startMainJob() throws Exception {
-		System.out.println("Data combining finished, starting main process");
-		return true;
 	}
 }

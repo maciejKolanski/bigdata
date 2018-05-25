@@ -1,7 +1,5 @@
 package dataCombining;
 
-import java.io.IOException;
-
 import org.apache.hadoop.mapreduce.Mapper;
 import org.bson.BSONObject;
 
@@ -23,8 +21,6 @@ public class GdpMapper extends Mapper<Object, BSONObject, LineKeyWritable, LineV
 						new LineKeyWritable(code, year),
 						outputValue);
 		
-			} catch (IOException | InterruptedException e) {
-				e.printStackTrace();
 			} catch (Exception e) {
 				System.out.println("Parsing error: " + value);
 				e.printStackTrace();
