@@ -28,7 +28,6 @@ public class MetadataCSVParser implements Runnable {
 		changesDetected = changesDetectedA;
 	}
 
-	@Override
 	public void run() {
 		try {
 			Reader reader = Files.newBufferedReader(Paths.get(csvFilename), StandardCharsets.UTF_8);

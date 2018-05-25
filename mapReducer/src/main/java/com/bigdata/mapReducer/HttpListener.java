@@ -19,8 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 import com.mongodb.hadoop.MongoInputFormat;
 import com.mongodb.hadoop.MongoOutputFormat;
 
+import dataCombining.BasicReducer;
 import dataCombining.EducationMapper;
 import dataCombining.GdpMapper;
+import dataCombining.LineKeyWritable;
 import dataCombining.PopulationMapper;
 
 @RestController
@@ -68,51 +70,7 @@ public class HttpListener extends Configured {
 		 * 
 		 * return job.waitForCompletion(true);
 		 */
-		final CountDownLatch latch = new CountDownLatch(3);
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					startGdpMappingJob();
-					latch.countDown();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}.start();
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					startEducationExcepnsesMapinngJob();
-					latch.countDown();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}.start();
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					startPopulationMappingJob();
-					latch.countDown();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}.start();
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					latch.await();
-					startMainJob();
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}.start();
+		startGdpMappingJob();
 
 		return true;
 	}
@@ -121,21 +79,23 @@ public class HttpListener extends Configured {
 		Configuration conf = new Configuration();
 
 		conf.setClass("mongo.job.mapper", GdpMapper.class, GdpMapper.class);
-		conf.set("mongo.input.uri", "mongodb://127.0.0.1:27017/mydb.gdp");
-		conf.set("mongo.output.uri", "mongodb://127.0.0.1:27017/mydb.output");
+		conf.setClass("mongo.job.reducer", BasicReducer.class, BasicReducer.class);
+		conf.set("mongo.input.uri", "mongodb://127.0.0.1:27017/bigdata.gdp");
+		conf.set("mongo.output.uri", "mongodb://127.0.0.1:27017/bigdata.output");
 
 		Job job = Job.getInstance(conf);
 		job.setJarByClass(HttpListener.class);
-		job.setJobName(this.getClass().getName());
+		job.setJobName("gdp_job");
 		job.setInputFormatClass(MongoInputFormat.class);
 		job.setOutputFormatClass(MongoOutputFormat.class);
-		job.setMapOutputKeyClass(Text.class);
-		job.setMapOutputValueClass(IntWritable.class);
+		job.setMapOutputKeyClass(LineKeyWritable.class);
+		job.setMapOutputValueClass(Text.class);
 
 		job.setJarByClass(HttpListener.class);
 		job.setJobName("gdpMappingJob");
 
 		job.setMapperClass(GdpMapper.class);
+		job.setReducerClass(BasicReducer.class);
 		job.waitForCompletion(true);
 	}
 
