@@ -16,9 +16,10 @@ public class MetadataMapper extends Mapper<Object, BSONObject, LineKeyWritable, 
 				LineValueWritable outputValue = new LineValueWritable();
 				outputValue.setRegion(region);
 			
-				context.write(
-						new LineKeyWritable(code, 1),
-						outputValue);
+				for (int i = 1950; i < 2020; ++i)
+					context.write(
+							new LineKeyWritable(code, i),
+							outputValue);
 				
 			} catch (Exception e) {
 				System.out.println("Parsing error: " + value);

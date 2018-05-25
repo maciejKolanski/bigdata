@@ -25,6 +25,31 @@ public class LineValueWritable implements WritableComparable<LineValueWritable> 
 	private LongWritable gdp;
 	private FloatWritable education;
 	
+	public static LineValueWritable FromBSON(BasicBSONObject bson) {
+		try {
+			LineValueWritable lineValue = new LineValueWritable();
+			switch(bson.getInt("type")) {
+				case Region:
+					lineValue.setRegion(bson.getString("region"));
+					break;
+				case GDP:
+					lineValue.setGdp(Long.parseLong(bson.getString("gdp")));
+					break;
+				case Population:
+					lineValue.setPopulation(bson.getInt("population"), bson.getString("countryName"));
+					break;
+				case Education:
+					lineValue.setEducation(Float.parseFloat(bson.getString("education")));
+					break;
+			};
+			
+			return lineValue;
+		} catch (Exception e) {
+			System.out.println("Unable to convert bson to LineKeyWritable: " + bson.toString());
+			return null;
+		}
+	}
+	
 	public LineValueWritable() {
 		type = new IntWritable(NotSet);
 		countryName = new Text();
@@ -36,6 +61,22 @@ public class LineValueWritable implements WritableComparable<LineValueWritable> 
 	
 	public int getType() {
 		return type.get();
+	}
+
+	public String getRegion() {
+		return region.toString();
+	}
+
+	public String getGdp() {
+		return gdp.toString();
+	}
+	
+	public int getPopulation() {
+		return population.get();
+	}
+
+	public float getEducation() {
+		return education.get();
 	}
 	
 	public void setGdp(long gdp) {
@@ -58,7 +99,7 @@ public class LineValueWritable implements WritableComparable<LineValueWritable> 
 		this.region.set(region);
 		this.type.set(Region);
 	}
-	
+		
 	public BasicBSONObject toBSON() {
 		BasicBSONObject bson = new BasicBSONObject();
 		bson.put("type", type.get());

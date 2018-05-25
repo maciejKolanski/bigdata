@@ -4,8 +4,10 @@ import javax.ws.rs.core.Response;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.jobcontrol.JobControl;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,6 +18,8 @@ import com.mongodb.hadoop.MongoInputFormat;
 import com.mongodb.hadoop.MongoOutputFormat;
 
 import dataCombining.BasicReducer;
+import dataCombining.CombinedMapper;
+import dataCombining.CombinedReducer;
 import dataCombining.EducationMapper;
 import dataCombining.GdpMapper;
 import dataCombining.LineKeyWritable;
@@ -32,16 +36,30 @@ public class HttpListener extends Configured {
 
 	    JobControl jobControl = new JobControl("jobChain"); 
 		
-	    ControlledJob gdp = createBasicJob(GdpMapper.class, "gdp");
-	    ControlledJob population = createBasicJob(PopulationMapper.class, "population");
-	    ControlledJob education = createBasicJob(EducationMapper.class, "education");
-	    ControlledJob metadata = createBasicJob(MetadataMapper.class, "metadata");
+	    ControlledJob gdp = createJob(GdpMapper.class, BasicReducer.class, LineKeyWritable.class,
+	    		"gdp", "tmpcombined");
+	    ControlledJob population = createJob(PopulationMapper.class, BasicReducer.class, LineKeyWritable.class,
+	    		"population", "tmpcombined");
+	    ControlledJob education = createJob(EducationMapper.class, BasicReducer.class, LineKeyWritable.class,
+	    		"education", "tmpcombined");
+	    ControlledJob metadata = createJob(MetadataMapper.class, BasicReducer.class, LineKeyWritable.class,
+	    		"metadata", "tmpcombined");
 
     	jobControl.addJob(gdp);
     	jobControl.addJob(population);
     	jobControl.addJob(education);
     	jobControl.addJob(metadata);
 	    
+    	ControlledJob combined = createJob(CombinedMapper.class, CombinedReducer.class, LineKeyWritable.class, 
+    			"tmpcombined", "tmpmapped");
+    	combined.addDependingJob(gdp);
+    	combined.addDependingJob(population);
+    	combined.addDependingJob(education);
+    	combined.addDependingJob(metadata);
+    	
+    	
+    	jobControl.addJob(combined);
+    	
         Thread jobControlThread = new Thread(jobControl);
         jobControlThread.start();
 
@@ -67,31 +85,36 @@ public class HttpListener extends Configured {
 		MongoDatabase db = mongoClient.getDatabase("bigdata");
 		
 		db.getCollection("tmpcombined").drop();
+		db.getCollection("tmpmapped").drop();
 		mongoClient.close();
 	}
 	
-	private ControlledJob createBasicJob(Class<?> mapperClass,
-		String inputCollectionName) throws Exception {
+	private ControlledJob createJob(
+		Class<?> mapperClass,
+		Class<?> reducerClass,
+		Class<?> mapOutputKeyClass,
+		String inputCollectionName,
+		String outputCollectionName) throws Exception {
 		
 		Configuration conf = new Configuration();
 
 		conf.setClass("mongo.job.mapper", mapperClass, mapperClass);
-		conf.setClass("mongo.job.reducer", BasicReducer.class, BasicReducer.class);
+		conf.setClass("mongo.job.reducer", reducerClass, reducerClass);
 		conf.set("mongo.input.uri", "mongodb://127.0.0.1:27017/bigdata." + inputCollectionName);
-		conf.set("mongo.output.uri", "mongodb://127.0.0.1:27017/bigdata.tmpcombined");
+		conf.set("mongo.output.uri", "mongodb://127.0.0.1:27017/bigdata." + outputCollectionName);
 
 		Job job = Job.getInstance(conf);
 		job.setJarByClass(HttpListener.class);
 		job.setJobName(mapperClass.getName());
+		
 		job.setInputFormatClass(MongoInputFormat.class);
 		job.setOutputFormatClass(MongoOutputFormat.class);
-		job.setMapOutputKeyClass(LineKeyWritable.class);
+		
+		job.setMapOutputKeyClass(mapOutputKeyClass);
 		job.setMapOutputValueClass(LineValueWritable.class);
 
-		job.setJarByClass(HttpListener.class);
-
 		job.setMapperClass((Class<? extends org.apache.hadoop.mapreduce.Mapper>) mapperClass);
-		job.setReducerClass(BasicReducer.class);
+		job.setReducerClass((Class<? extends Reducer>) reducerClass);
 		
 		ControlledJob controlledJob = new ControlledJob(conf);
 		controlledJob.setJob(job);
