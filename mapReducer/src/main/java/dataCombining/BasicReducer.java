@@ -10,7 +10,10 @@ public class BasicReducer extends Reducer<LineKeyWritable, LineValueWritable, Ba
 	public void reduce(LineKeyWritable key, Iterable<LineValueWritable> values, Context context) {
 		for (LineValueWritable value : values) {
 			try {
-				context.write(key.toBSON(), value.toBSON());
+				BasicBSONObject bsonKey = key.toBSON();
+				bsonKey.put("type", value.getType());
+				
+				context.write(bsonKey, value.toBSON());
 				break;
 			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();

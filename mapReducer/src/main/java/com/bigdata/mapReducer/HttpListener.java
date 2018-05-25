@@ -8,6 +8,7 @@ import javax.ws.rs.core.Response;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.jobcontrol.JobControl;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
@@ -15,6 +16,7 @@ import org.apache.hadoop.mapreduce.lib.jobcontrol.ControlledJob;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.bson.BSONObject;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -47,8 +49,10 @@ public class HttpListener extends Configured {
 	    JobControl jobControl = new JobControl("jobChain"); 
 		
 	    ControlledJob gdp = createBasicJob(GdpMapper.class, "gdp");
+	    ControlledJob population = createBasicJob(PopulationMapper.class, "population");
 
     	jobControl.addJob(gdp);
+    	jobControl.addJob(population);
 	    
         Thread jobControlThread = new Thread(jobControl);
         jobControlThread.start();
@@ -79,7 +83,9 @@ public class HttpListener extends Configured {
 		mongoClient.close();
 	}
 	
-	private ControlledJob createBasicJob(Class<?> mapperClass, String inputCollectionName) throws Exception {
+	private ControlledJob createBasicJob(Class<?> mapperClass,
+		String inputCollectionName) throws Exception {
+		
 		Configuration conf = new Configuration();
 
 		conf.setClass("mongo.job.mapper", mapperClass, mapperClass);
@@ -97,7 +103,7 @@ public class HttpListener extends Configured {
 
 		job.setJarByClass(HttpListener.class);
 
-		job.setMapperClass(GdpMapper.class);
+		job.setMapperClass((Class<? extends org.apache.hadoop.mapreduce.Mapper>) mapperClass);
 		job.setReducerClass(BasicReducer.class);
 		
 		ControlledJob controlledJob = new ControlledJob(conf);

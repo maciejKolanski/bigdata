@@ -48,6 +48,11 @@ public class LineValueWritable implements WritableComparable<LineValueWritable> 
 		this.gdp.set(gdp);
 		this.type.set(GDP);
 	}
+
+	public void setPopulation(int population) {
+		this.population.set(population);
+		this.type.set(Population);
+	}
 	
 	public BasicBSONObject toBSON() {
 		BasicBSONObject bson = new BasicBSONObject();
@@ -56,7 +61,7 @@ public class LineValueWritable implements WritableComparable<LineValueWritable> 
 		bson.put("region", region.toString());
 		bson.put("population", population.get());
 		bson.put("gdp", gdp.toString());
-		bson.put("education", population.toString());
+		bson.put("education", education.toString());
 		
 		return bson;
 	}
