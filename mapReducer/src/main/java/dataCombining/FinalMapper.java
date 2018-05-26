@@ -12,6 +12,9 @@ public class FinalMapper extends
 	@Override
 	public void map(BasicBSONObject key, BasicBSONObject value, Context context) {
 		try {
+			if (value.getString("region").isEmpty())
+				return;
+			
 			value.put("code", key.getString("code"));
 			value.put("year", key.getInt("year"));
 

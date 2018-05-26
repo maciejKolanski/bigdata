@@ -7,6 +7,7 @@ public class CombinedMapper extends Mapper<BasicBSONObject, BasicBSONObject, Lin
 	@Override
 	public void map(BasicBSONObject key, BasicBSONObject value, Context context) {
 		try {
+			
 			context.write(
 					LineKeyWritable.FromBSON(key),
 					LineValueWritable.FromBSON(value));
