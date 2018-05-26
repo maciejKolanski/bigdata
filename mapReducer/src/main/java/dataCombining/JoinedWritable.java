@@ -5,7 +5,6 @@ import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hadoop.io.IntWritable;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
 import org.bson.BasicBSONObject;
@@ -74,12 +73,12 @@ public class JoinedWritable implements WritableComparable<JoinedWritable> {
 	public int compareTo(JoinedWritable o) {
 		if (code.compareTo(o.code) != 0)
 			return code.compareTo(o.code);
+		if (year.compareTo(o.year) != 0)
+			return o.year.compareTo(year);
 		if (name.compareTo(o.name) != 0)
 			return name.compareTo(o.name);
 		if (region.compareTo(o.region) != 0)
 			return region.compareTo(o.region);
-		if (year.compareTo(o.year) != 0)
-			return year.compareTo(o.year);
 		if (population.compareTo(o.population) != 0)
 			return population.compareTo(o.population);
 		if (populationSegment.compareTo(o.populationSegment) != 0)
