@@ -44,6 +44,18 @@ public class JoinedWritable implements WritableComparable<JoinedWritable> {
 		educationPerCapita = new IntWritable();
 	}
 	
+	public JoinedWritable(JoinedWritable s) {
+		code = new Text(s.code);
+		name = new Text(s.name);
+		region = new Text(s.region);
+		year = new IntWritable(s.year.get());
+		population = new IntWritable(s.population.get());
+		populationSegment = new IntWritable(s.populationSegment.get());
+		gdp = new Text(s.gdp);
+		gdpSegment = new IntWritable(s.gdpSegment.get());
+		educationPerCapita = new IntWritable(s.educationPerCapita.get());
+	}
+	
 	@Override
 	public void readFields(DataInput in) throws IOException {
 		code.readFields(in);

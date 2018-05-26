@@ -1,18 +1,32 @@
 package dataCombining;
 
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.bson.BasicBSONObject;
 
+
 public class FinalReducer extends Reducer<Text, JoinedWritable, BasicBSONObject, BasicBSONObject> {
 	@Override
-	public void reduce(Text key, Iterable<JoinedWritable> values, Context context) {		
-		ChangeBuffer populationChangeBuffer = new ChangeBuffer(3);
-		ChangeBuffer gdpChangeBuffer = new ChangeBuffer(3);
+	public void reduce(Text key, Iterable<JoinedWritable> valuesIters, Context context) {		
+		ChangeBuffer populationChangeBuffer = new ChangeBuffer(4);
+		ChangeBuffer gdpChangeBuffer = new ChangeBuffer(4);
+		
+		List<JoinedWritable> values  = new ArrayList<JoinedWritable>();
+		for (JoinedWritable valueIter : valuesIters)
+			values.add(new JoinedWritable(valueIter));
+		Collections.sort(values, new Comparator<JoinedWritable>() {
+			@Override
+			public int compare(JoinedWritable a, JoinedWritable b) {
+				return a.year.get() - b.year.get();
+			}
+		});
+		
+		int maxYear = 0;
 		
 		for (JoinedWritable value : values) {
 			try {
@@ -20,7 +34,13 @@ public class FinalReducer extends Reducer<Text, JoinedWritable, BasicBSONObject,
 				bsonKey.put("code", value.code.toString());
 				bsonKey.put("year", value.year.get());
 				
+				if (maxYear > value.year.get())
+					throw new Exception("This is not sorted");
+				else
+					maxYear = value.year.get();
+				
 				populationChangeBuffer.pushChange(value.populationSegment.get());
+				gdpChangeBuffer.pushChange(value.gdpSegment.get());
 				
 				BasicBSONObject bsonValue = new BasicBSONObject();
 				bsonValue.put("countryName",  value.name.toString());
@@ -34,8 +54,9 @@ public class FinalReducer extends Reducer<Text, JoinedWritable, BasicBSONObject,
 				bsonValue.put("educationPerCapita",  value.educationPerCapita.get());
 				
 				context.write(bsonKey, bsonValue);
-			} catch (IOException | InterruptedException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
+				break;
 			}
 		}
 	}

@@ -39,7 +39,7 @@ public class PopulationCSVParser extends CSVParser {
 			document.append("name", line[0]);
 			document.append("code", line[1]);
 			document.append("year", line[2]);
-			document.append("value", line[3]);
+			document.append("value", (int)Float.parseFloat(line[3]));
 			
 			collection.insertOne(document);
 		}

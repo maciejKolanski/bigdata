@@ -13,7 +13,7 @@ public class PopulationMapper extends Mapper<Object, BSONObject, LineKeyWritable
 				final String code = (String)value.get("code");
 				final String name = (String)value.get("name");
 				final int year = Integer.parseInt(((String)value.get("year")));
-				final int population = Integer.parseInt(((String)value.get("value")));
+				final int population = (int)value.get("value");
 				
 				LineValueWritable outputValue = new LineValueWritable();
 				outputValue.setPopulation(population, name);
