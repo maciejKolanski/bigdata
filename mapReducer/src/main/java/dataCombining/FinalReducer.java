@@ -29,7 +29,6 @@ public class FinalReducer extends Reducer<Text, JoinedWritable, BasicBSONObject,
 				bsonValue.put("educationPerCapita",  value.educationPerCapita.get());
 				
 				context.write(bsonKey, bsonValue);
-				break;
 			} catch (IOException | InterruptedException e) {
 				e.printStackTrace();
 			}

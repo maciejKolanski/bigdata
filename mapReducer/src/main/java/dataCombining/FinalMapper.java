@@ -1,5 +1,6 @@
 package dataCombining;
 
+import java.math.BigDecimal;
 import java.math.BigInteger;
 
 import org.apache.hadoop.io.Text;
@@ -52,7 +53,7 @@ public class FinalMapper extends
 	}
 
 	private int calculateGdpSegment(String gdpStr) {
-		BigInteger gdp = new BigInteger(gdpStr);
+		BigInteger gdp = (new BigDecimal(gdpStr)).toBigInteger();
 		
 		if (gdp.compareTo(new BigInteger("384780000")) < 0)
 			return 0;
@@ -62,17 +63,19 @@ public class FinalMapper extends
 			return 2;
 		else if (gdp.compareTo(new BigInteger("9995956000")) < 0)
 			return 3;
-		else if (gdp.compareTo(new BigInteger("101895344650")) < 0)
+		else if (gdp.compareTo(new BigInteger("101895344640")) < 0)
 			return 4;
 		else
 			return 5;
 	}
 	
 	private int calculateEducationPerCapita(String gdpStr, float educationExpenses, int aPopulation) {
-		BigInteger gdp = new BigInteger(gdpStr);
+		BigInteger gdp = (new BigDecimal(gdpStr)).toBigInteger();
 		BigInteger population = BigInteger.valueOf(aPopulation);
 		
 		int gdpPerCapita = gdp.divide(population).intValue();
-		return Math.round((gdpPerCapita * (educationExpenses / 100)));
+		gdpPerCapita = (int) (gdpPerCapita * (educationExpenses / 100));
+		
+		return gdpPerCapita;
 	}
 }
