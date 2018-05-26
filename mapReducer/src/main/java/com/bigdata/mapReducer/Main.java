@@ -9,7 +9,7 @@ public class Main {
 	
 	public static void main(String[] args) throws Exception {
 		System.setProperty("hadoop.home.dir", "/");
-		new HttpListener().initMapReduce();
-		//SpringApplication.run(Main.class, args);
+//		new HttpListener().initMapReduce();
+		SpringApplication.run(Main.class, args);
 	}
 }

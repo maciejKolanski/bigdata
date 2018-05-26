@@ -37,7 +37,7 @@ import dataCombining.SegmentsReducer;
 @RestController
 public class HttpListener extends Configured {
 
-	@RequestMapping("/mapReducer")
+	@RequestMapping("/mapReduce")
 	public Response initMapReduce() throws Exception {
 		prepareMongo();
 
