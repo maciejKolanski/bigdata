@@ -48,7 +48,7 @@ public class FinalReducer extends Reducer<Text, JoinedWritable, BasicBSONObject,
 				bsonValue.put("population_segment",  value.populationSegment.get());
 				bsonValue.put("population_change",  populationChangeBuffer.getChanged());
 				bsonValue.put("population",  value.population.get());
-				bsonValue.put("gdpSegment",  value.gdpSegment.get());
+				bsonValue.put("gdp_segment",  value.gdpSegment.get());
 				bsonValue.put("gdp_change",  gdpChangeBuffer.getChanged());
 				bsonValue.put("gdp",  value.gdp.toString());
 				bsonValue.put("educationPerCapita",  value.educationPerCapita.get());

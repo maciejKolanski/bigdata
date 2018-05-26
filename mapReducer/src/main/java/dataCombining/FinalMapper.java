@@ -30,7 +30,6 @@ public class FinalMapper extends
 				.set(calculateGdpSegment(joined.gdp.toString()));
 			
 			context.write(joined.code, joined);
-
 		} catch (Exception e) {
 			System.out.println("Parsing error: " + value);
 			e.printStackTrace();

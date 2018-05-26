@@ -4,6 +4,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.jobcontrol.JobControl;
 import org.apache.hadoop.mapreduce.Job;
@@ -29,6 +30,9 @@ import dataCombining.LineKeyWritable;
 import dataCombining.LineValueWritable;
 import dataCombining.MetadataMapper;
 import dataCombining.PopulationMapper;
+import dataCombining.SegmentKeyWritable;
+import dataCombining.SegmentsMapper;
+import dataCombining.SegmentsReducer;
 
 @RestController
 public class HttpListener extends Configured {
@@ -62,12 +66,17 @@ public class HttpListener extends Configured {
     	    	
     	jobControl.addJob(combined);
     	
-
-    	ControlledJob last = createJob(FinalMapper.class, FinalReducer.class,
+    	ControlledJob mainJob = createJob(FinalMapper.class, FinalReducer.class,
     			Text.class, JoinedWritable.class, "tmpmapped", "output");
-    	last.addDependingJob(combined);
+    	mainJob.addDependingJob(combined);
     	
-    	jobControl.addJob(last);
+    	jobControl.addJob(mainJob);
+    	
+    	ControlledJob segments = createJob(SegmentsMapper.class, SegmentsReducer.class,
+    			SegmentKeyWritable.class, IntWritable.class, "output", "segments_output");
+    	segments.addDependingJob(mainJob);
+    	
+    	jobControl.addJob(segments);
     	
         Thread jobControlThread = new Thread(jobControl);
         jobControlThread.start();
@@ -96,6 +105,7 @@ public class HttpListener extends Configured {
 		db.getCollection("tmpcombined").drop();
 		db.getCollection("tmpmapped").drop();
 		db.getCollection("output").drop();
+		db.getCollection("segments_output").drop();
 		mongoClient.close();
 	}
 	
