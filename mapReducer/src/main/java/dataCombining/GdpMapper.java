@@ -12,10 +12,9 @@ public class GdpMapper extends Mapper<Object, BSONObject, LineKeyWritable, LineV
 			
 				String code = (String)value.get("code");
 				int year = Integer.parseInt(((String)value.get("year")));
-				long gdp = Long.parseLong(((String)value.get("value")));
 				
 				LineValueWritable outputValue = new LineValueWritable();
-				outputValue.setGdp(gdp);
+				outputValue.setGdp((String)value.get("value"));
 				
 				context.write(
 						new LineKeyWritable(code, year),

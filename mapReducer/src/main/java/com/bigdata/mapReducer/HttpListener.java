@@ -21,7 +21,10 @@ import dataCombining.BasicReducer;
 import dataCombining.CombinedMapper;
 import dataCombining.CombinedReducer;
 import dataCombining.EducationMapper;
+import dataCombining.FinalMapper;
+import dataCombining.FinalReducer;
 import dataCombining.GdpMapper;
+import dataCombining.JoinedWritable;
 import dataCombining.LineKeyWritable;
 import dataCombining.LineValueWritable;
 import dataCombining.MetadataMapper;
@@ -36,29 +39,35 @@ public class HttpListener extends Configured {
 
 	    JobControl jobControl = new JobControl("jobChain"); 
 		
-	    ControlledJob gdp = createJob(GdpMapper.class, BasicReducer.class, LineKeyWritable.class,
-	    		"gdp", "tmpcombined");
-	    ControlledJob population = createJob(PopulationMapper.class, BasicReducer.class, LineKeyWritable.class,
-	    		"population", "tmpcombined");
-	    ControlledJob education = createJob(EducationMapper.class, BasicReducer.class, LineKeyWritable.class,
-	    		"education", "tmpcombined");
-	    ControlledJob metadata = createJob(MetadataMapper.class, BasicReducer.class, LineKeyWritable.class,
-	    		"metadata", "tmpcombined");
+	    ControlledJob gdp = createJob(GdpMapper.class, BasicReducer.class,
+	    		LineKeyWritable.class, LineValueWritable.class,  "gdp", "tmpcombined");
+	    ControlledJob population = createJob(PopulationMapper.class, BasicReducer.class,
+	    		LineKeyWritable.class, LineValueWritable.class, "population", "tmpcombined");
+	    ControlledJob education = createJob(EducationMapper.class, BasicReducer.class,
+	    		LineKeyWritable.class, LineValueWritable.class, "education", "tmpcombined");
+	    ControlledJob metadata = createJob(MetadataMapper.class, BasicReducer.class,
+	    		LineKeyWritable.class, LineValueWritable.class, "metadata", "tmpcombined");
 
     	jobControl.addJob(gdp);
     	jobControl.addJob(population);
     	jobControl.addJob(education);
     	jobControl.addJob(metadata);
 	    
-    	ControlledJob combined = createJob(CombinedMapper.class, CombinedReducer.class, LineKeyWritable.class, 
-    			"tmpcombined", "tmpmapped");
+    	ControlledJob combined = createJob(CombinedMapper.class, CombinedReducer.class,
+    			LineKeyWritable.class, LineValueWritable.class, "tmpcombined", "tmpmapped");
     	combined.addDependingJob(gdp);
     	combined.addDependingJob(population);
     	combined.addDependingJob(education);
     	combined.addDependingJob(metadata);
-    	
-    	
+    	    	
     	jobControl.addJob(combined);
+    	
+
+    	ControlledJob last = createJob(FinalMapper.class, FinalReducer.class,
+    			Text.class, JoinedWritable.class, "tmpmapped", "output");
+    	last.addDependingJob(combined);
+    	
+    	jobControl.addJob(last);
     	
         Thread jobControlThread = new Thread(jobControl);
         jobControlThread.start();
@@ -86,6 +95,7 @@ public class HttpListener extends Configured {
 		
 		db.getCollection("tmpcombined").drop();
 		db.getCollection("tmpmapped").drop();
+		db.getCollection("output").drop();
 		mongoClient.close();
 	}
 	
@@ -93,6 +103,7 @@ public class HttpListener extends Configured {
 		Class<?> mapperClass,
 		Class<?> reducerClass,
 		Class<?> mapOutputKeyClass,
+		Class<?> mapOutputValueClass,
 		String inputCollectionName,
 		String outputCollectionName) throws Exception {
 		
@@ -111,7 +122,7 @@ public class HttpListener extends Configured {
 		job.setOutputFormatClass(MongoOutputFormat.class);
 		
 		job.setMapOutputKeyClass(mapOutputKeyClass);
-		job.setMapOutputValueClass(LineValueWritable.class);
+		job.setMapOutputValueClass(mapOutputValueClass);
 
 		job.setMapperClass((Class<? extends org.apache.hadoop.mapreduce.Mapper>) mapperClass);
 		job.setReducerClass((Class<? extends Reducer>) reducerClass);

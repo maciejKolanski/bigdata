@@ -22,7 +22,7 @@ public class LineValueWritable implements WritableComparable<LineValueWritable> 
 	private Text countryName;
 	private Text region;
 	private IntWritable population;
-	private LongWritable gdp;
+	private Text gdp;
 	private FloatWritable education;
 	
 	public static LineValueWritable FromBSON(BasicBSONObject bson) {
@@ -33,7 +33,7 @@ public class LineValueWritable implements WritableComparable<LineValueWritable> 
 					lineValue.setRegion(bson.getString("region"));
 					break;
 				case GDP:
-					lineValue.setGdp(Long.parseLong(bson.getString("gdp")));
+					lineValue.setGdp(bson.getString("gdp"));
 					break;
 				case Population:
 					lineValue.setPopulation(bson.getInt("population"), bson.getString("countryName"));
@@ -55,7 +55,7 @@ public class LineValueWritable implements WritableComparable<LineValueWritable> 
 		countryName = new Text();
 		region = new Text();
 		population = new IntWritable();
-		gdp = new LongWritable();
+		gdp = new Text();
 		education = new FloatWritable();
 	}
 	
@@ -70,6 +70,10 @@ public class LineValueWritable implements WritableComparable<LineValueWritable> 
 	public String getGdp() {
 		return gdp.toString();
 	}
+
+	public String getCountryName() {
+		return countryName.toString();
+	}
 	
 	public int getPopulation() {
 		return population.get();
@@ -79,7 +83,7 @@ public class LineValueWritable implements WritableComparable<LineValueWritable> 
 		return education.get();
 	}
 	
-	public void setGdp(long gdp) {
+	public void setGdp(String gdp) {
 		this.gdp.set(gdp);
 		this.type.set(GDP);
 	}

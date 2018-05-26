@@ -22,6 +22,7 @@ public class CombinedReducer extends Reducer<LineKeyWritable, LineValueWritable,
 					outputValue.put("gdp", value.getGdp());
 					break;
 				case LineValueWritable.Population:
+					outputValue.put("countryName", value.getCountryName());
 					outputValue.put("population", value.getPopulation());
 					break;
 				case LineValueWritable.Education:
