@@ -73,6 +73,6 @@ public class FinalMapper extends
 		BigInteger population = BigInteger.valueOf(aPopulation);
 		
 		int gdpPerCapita = gdp.divide(population).intValue();
-		return (int) (gdpPerCapita * educationExpenses);
+		return Math.round((gdpPerCapita * (educationExpenses / 100)));
 	}
 }
