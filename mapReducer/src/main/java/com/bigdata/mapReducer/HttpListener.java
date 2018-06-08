@@ -1,5 +1,7 @@
 package com.bigdata.mapReducer;
 
+import java.io.IOException;
+
 import javax.ws.rs.core.Response;
 
 import org.apache.hadoop.conf.Configuration;
@@ -93,7 +95,9 @@ public class HttpListener extends Configured {
 	        } catch (Exception e) {
         		e.printStackTrace();
 	        }
-	    } 
+	    }
+	    System.out.println("Map reduce finished!");
+	    exportOutput();
     	
 		return Response.ok().build();
 	}
@@ -140,5 +144,27 @@ public class HttpListener extends Configured {
 		ControlledJob controlledJob = new ControlledJob(conf);
 		controlledJob.setJob(job);
 		return controlledJob;
+	}
+
+	private void exportOutput() throws Exception {
+		final String mediaDir = "/media/sf_bidata/";
+		{
+			String segmentsCommand = "mongoexport --db bigdata --collection segments_output --type=json  --out "
+					+ mediaDir + "segments_output.json";
+	        Process process = Runtime.getRuntime().exec(segmentsCommand);
+	        int waitFor = process.waitFor();
+	        System.out.println("Exported segments output with status " + waitFor);
+		}
+		{
+			String outputCommand = "mongoexport --db bigdata --collection output --type=json  --out "
+					+ mediaDir + "main_output.json";
+	        Process process = Runtime.getRuntime().exec(outputCommand);
+	        int waitFor = process.waitFor();
+	        System.out.println("Exported main output with status " + waitFor);
+		}
+		{
+			String outputCommand = "touch " + mediaDir + "start";
+	        Runtime.getRuntime().exec(outputCommand);
+		}
 	}
 }
