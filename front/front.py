@@ -35,11 +35,13 @@ SEGMENTS = [
     "Ogromna",
 ]
 
-CHANGE = {
-    -1: "Spadek",
-    0: "Stagnacja",
-    1: "Wzrost"
-}
+def change(c):
+    if c == 0:
+        return "Stagnacja"
+    elif c > 0:
+        return "Wzrost"
+    else:
+        return "Spadek"
 
 
 def make_title(worksheet, titleRowFormat):
@@ -64,9 +66,9 @@ def make_data_line(worksheet, segments, row, lineData, dataRowFormat):
     worksheet.write(row, COUNTRY_C, lineData['countryName'], dataRowFormat['basic'])
     worksheet.write(row, YEAR_C, lineData['_id']['year'], dataRowFormat['basic'])
     worksheet.write(row, POPULATION_C, SEGMENTS[lineData['population_segment']], dataRowFormat['basic'])
-    worksheet.write(row, POPULATION_CHANGE_C, CHANGE[lineData['population_change']], dataRowFormat['basic'])
+    worksheet.write(row, POPULATION_CHANGE_C, change(lineData['population_change']), dataRowFormat['basic'])
     worksheet.write(row, GDP_C, SEGMENTS[lineData['gdp_segment']], dataRowFormat['basic'])
-    worksheet.write(row, GDP_CHANGE_C, CHANGE[lineData['gdp_change']], dataRowFormat['basic'])
+    worksheet.write(row, GDP_CHANGE_C, change(lineData['gdp_change']), dataRowFormat['basic'])
     worksheet.write(row, EDUCATION_C, lineData['educationPerCapita'], dataRowFormat['basic'])
 
     educationPerCapitaChange = 0
